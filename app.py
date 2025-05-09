@@ -104,7 +104,7 @@ def segment_image(image, mask_generator):
     with st.spinner("Generating object mask..."):
         masks = mask_generator.generate(image)
     
-    st.write(f"Found {len(masks)} potential objects")
+    # st.write(f"Found {len(masks)} potential objects")
 
     # Get the largest mask
     mask = get_largest_mask(masks)
@@ -193,9 +193,9 @@ def predict_dimensions(image, model, mask_generator, transform):
     height, width, length = output[0].cpu().numpy()
 
     return {
-        "height": float(height), 
-        "width": float(width), 
-        "length": float(length)
+        "height": float(height*1.5), 
+        "width": float(width*1.5), 
+        "length": float(length*1.5)
     }, mask, masked_img
 
 @st.cache_resource
@@ -304,7 +304,7 @@ def main():
                     # axes[1].set_title("Segmented Object")
                     # axes[1].axis('off')
                     
-                    col2.pyplot(fig)
+                    # col2.pyplot(fig)
                     
                     # Display predictions in a nice format
                     st.subheader("Predicted Dimensions")
@@ -315,13 +315,7 @@ def main():
                     col2.metric("Width", f"{result['width']:.2f} m")
                     col3.metric("Length", f"{result['length']:.2f} m")
                     
-                    st.markdown("""
-                    ### About the Predictions
-                    - **Height**: Vertical dimension of the object
-                    - **Width**: Horizontal dimension across the object
-                    - **Length**: Depth dimension of the object
                     
-                    """)
 
 if __name__ == "__main__":
     main()
