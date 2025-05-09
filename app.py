@@ -6,7 +6,21 @@ import torchvision.transforms as transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-import cv2
+try:
+    import cv2
+except ImportError:
+    # Try installing opencv-python-headless which works better on cloud platforms
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "opencv-python-headless"])
+    import cv2
+except ImportError:
+    # Try installing opencv-python-headless which works better on cloud platforms
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "opencv-python-headless"])
+    import cv2
+
 from io import BytesIO
 import requests
 import tempfile
@@ -286,9 +300,9 @@ def main():
                     axes[0].set_title("Segmentation Mask")
                     axes[0].axis('off')
                     
-                    axes[1].imshow(masked_img)
-                    axes[1].set_title("Segmented Object")
-                    axes[1].axis('off')
+                    # axes[1].imshow(masked_img)
+                    # axes[1].set_title("Segmented Object")
+                    # axes[1].axis('off')
                     
                     col2.pyplot(fig)
                     
@@ -307,7 +321,6 @@ def main():
                     - **Width**: Horizontal dimension across the object
                     - **Length**: Depth dimension of the object
                     
-                    Note: The accuracy of these predictions depends on the quality of the training data and the image provided.
                     """)
 
 if __name__ == "__main__":
