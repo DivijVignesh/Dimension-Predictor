@@ -14,12 +14,6 @@ except ImportError:
     import sys
     subprocess.check_call([sys.executable, "-m", "pip", "install", "opencv-python-headless"])
     import cv2
-except ImportError:
-    # Try installing opencv-python-headless which works better on cloud platforms
-    import subprocess
-    import sys
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "opencv-python-headless"])
-    import cv2
 
 from io import BytesIO
 import requests
@@ -232,10 +226,15 @@ def load_model():
         return None
 
 def main():
+    # Configure session state to ensure consistent session ID
+    if 'session_initialized' not in st.session_state:
+        st.session_state.session_initialized = True
+    
     st.set_page_config(
         page_title="Object Dimension Predictor",
         page_icon="📏",
-        layout="wide"
+        layout="wide",
+        initial_sidebar_state="collapsed"
     )
     
     st.title("Object Dimension Predictor")
@@ -265,7 +264,14 @@ def main():
     
     # Image upload
     st.subheader("Upload an image containing an object")
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    
+    # Configure file uploader with correct parameters for cloud deployment
+    uploaded_file = st.file_uploader(
+        "Choose an image...", 
+        type=["jpg", "jpeg", "png"],
+        accept_multiple_files=False,
+        key="file_uploader"
+    )
     
     use_example = st.checkbox("Or use an example image")
     
@@ -273,49 +279,49 @@ def main():
     col1, col2 = st.columns(2)
     
     if uploaded_file is not None:
-        # Convert the file to an image
-        image = Image.open(uploaded_file).convert('RGB')
-        col1.image(image, caption="Uploaded Image", use_column_width=True)
+        try:
+            # Convert the file to an image with proper error handling
+            image_bytes = uploaded_file.read()
+            image = Image.open(BytesIO(image_bytes)).convert('RGB')
+            col1.image(image, caption="Uploaded Image", use_column_width=True)
+        except Exception as e:
+            st.error(f"Error processing uploaded image: {str(e)}")
     elif use_example:
-        # Use example image
-        example_url = "https://m.media-amazon.com/images/I/71ClGjocCKL._SX679_.jpg"
-        response = requests.get(example_url)
-        image = Image.open(BytesIO(response.content)).convert('RGB')
-        col1.image(image, caption="Example Image", use_column_width=True)
+        try:
+            # Use example image
+            example_url = "https://m.media-amazon.com/images/I/71ClGjocCKL._SX679_.jpg"
+            response = requests.get(example_url)
+            image = Image.open(BytesIO(response.content)).convert('RGB')
+            col1.image(image, caption="Example Image", use_column_width=True)
+        except Exception as e:
+            st.error(f"Error loading example image: {str(e)}")
     
     if image is not None:
         # Process button
         if st.button("Predict Dimensions"):
             with st.spinner("Processing..."):
-                # Predict dimensions
-                result, mask, masked_img = predict_dimensions(image, model, mask_generator, transform)
-                
-                if result:
-                    # Display results
-                    st.success("Prediction completed!")
+                try:
+                    # Predict dimensions
+                    result, mask, masked_img = predict_dimensions(image, model, mask_generator, transform)
                     
-                    # Display segmentation results
-                    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
-                    axes[0].imshow(mask, cmap='gray')
-                    axes[0].set_title("Segmentation Mask")
-                    axes[0].axis('off')
-                    
-                    # axes[1].imshow(masked_img)
-                    # axes[1].set_title("Segmented Object")
-                    # axes[1].axis('off')
-                    
-                    # col2.pyplot(fig)
-                    
-                    # Display predictions in a nice format
-                    st.subheader("Predicted Dimensions")
-                    
-                    col1, col2, col3 = st.columns(3)
-                    
-                    col1.metric("Height", f"{result['height']:.2f} m")
-                    col2.metric("Width", f"{result['width']:.2f} m")
-                    col3.metric("Length", f"{result['length']:.2f} m")
-                    
-                    
+                    if result:
+                        # Display results
+                        st.success("Prediction completed!")
+                        
+                        # Display segmentation mask
+                        col2.image(masked_img, caption="Segmentation Mask", use_column_width=True)
+                        
+                        # Display predictions in a nice format
+                        st.subheader("Predicted Dimensions")
+                        
+                        col1, col2, col3 = st.columns(3)
+                        
+                        col1.metric("Height", f"{abs(result['height']):.2f} m")
+                        col2.metric("Width", f"{abs(result['width']):.2f} m")
+                        col3.metric("Length", f"{abs(result['length']):.2f} m")
+                except Exception as e:
+                    st.error(f"Error during prediction: {str(e)}")
+                    st.error("Please try another image or check if the model files are correctly loaded.")
 
 if __name__ == "__main__":
     main()

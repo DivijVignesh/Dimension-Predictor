@@ -6,9 +6,9 @@ textColor="#262730"
 font="sans serif"
 
 [server]
-maxUploadSize = 200
-enableXsrfProtection = true
-enableCORS = false
+maxUploadSize = 2
+enableXsrfProtection = false
+enableCORS = true
 
 [browser]
 gatherUsageStats = false
