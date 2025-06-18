@@ -1,6 +1,6 @@
 # Object Dimension Prediction
 
-##Overview
+## Overview
 
 The goal of this project is to create a computer vision system that can predict the real-world dimensions (height, width, and length) of a object from a single  image. This system uses segmentation techniques and deep learning models without needing any additional depth information. The key innovation of this approach is the dual-input which processes both the original image and the segmented image of the primary object, allowing the model to learn from the background ques which will be available in the original image.
 
